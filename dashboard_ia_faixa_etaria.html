@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uso de IA por faixa etária</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #f3f4f4; --surface: #ffffff; --ink: #252729;
+      --muted: #73777b; --line: #e4e6e7; --gray: #73777b;
+      --gray-dark: #42474b; --gray-light: #aeb3b7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+    }
+    .wrap { width: min(1080px, calc(100% - 36px)); margin: 48px auto; }
+    header { margin-bottom: 28px; }
+    .eyebrow { color: var(--muted); text-transform: uppercase; letter-spacing: .12em; font-size: 11px; font-weight: 700; }
+    h1 { font-size: clamp(28px, 5vw, 42px); letter-spacing: -.04em; margin: 10px 0 8px; font-weight: 650; }
+    .intro { color: var(--muted); line-height: 1.6; max-width: 700px; margin: 0; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .pill { border: 1px solid var(--line); color: var(--muted); background: #fafafa; border-radius: 999px; padding: 7px 11px; font-size: 12px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; min-width: 0; }
+    .card.wide { grid-column: 1 / -1; }
+    h2 { font-size: 16px; margin: 0 0 5px; font-weight: 650; }
+    .sub { color: var(--muted); font-size: 12px; margin: 0 0 20px; }
+    .chart-box { height: 300px; position: relative; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+    .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 17px; }
+    .stat strong { display: block; font-size: 25px; letter-spacing: -.04em; }
+    .stat span { color: var(--muted); font-size: 12px; }
+    .note { color: var(--muted); font-size: 12px; line-height: 1.6; margin-top: 18px; }
+    .status { color: var(--muted); font-size: 12px; margin-top: 16px; }
+    footer { color: var(--muted); font-size: 12px; margin: 22px 2px; }
+    a { color: var(--gray-dark); }
+    @media (max-width: 720px) {
+      .wrap { margin: 28px auto; }
+      .grid { grid-template-columns: 1fr; }
+      .card.wide { grid-column: auto; }
+      .stats { grid-template-columns: 1fr; }
+      .chart-box { height: 270px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="eyebrow">Projeto de análise de dados · Eurostat</div>
+      <h1>Uso de inteligência artificial por idade</h1>
+      <p class="intro">Uma visão comparativa da utilização de ferramentas de IA generativa entre diferentes faixas etárias na União Europeia.</p>
+      <div class="meta">
+        <span class="pill">Ano: 2025</span>
+        <span class="pill">Região: União Europeia (27 países)</span>
+        <span class="pill">Unidade: % de indivíduos</span>
+      </div>
+    </header>
+
+    <section class="stats">
+      <div class="stat"><strong>63,81%</strong><span>Maior utilização · 16 a 24 anos</span></div>
+      <div class="stat"><strong>6,50%</strong><span>Menor utilização · 65 a 74 anos</span></div>
+      <div class="stat"><strong>57,31 p.p.</strong><span>Diferença entre os grupos extremos</span></div>
+    </section>
+
+    <section class="grid">
+      <article class="card wide">
+        <h2>Uso de IA por faixa etária</h2>
+        <p class="sub">Percentual de pessoas que utilizaram ferramentas de IA generativa nos últimos 3 meses.</p>
+        <div class="chart-box"><canvas id="ageChart"></canvas></div>
+      </article>
+      <article class="card">
+        <h2>Comparação entre gerações</h2>
+        <p class="sub">Destaque para a diferença entre os grupos mais jovens e mais velhos.</p>
+        <div class="chart-box"><canvas id="compareChart"></canvas></div>
+      </article>
+      <article class="card">
+        <h2>O que os dados indicam?</h2>
+        <p class="sub">Leitura rápida dos resultados</p>
+        <p style="line-height:1.75; color:#555b60; font-size:14px">
+          O percentual de uso diminui progressivamente nas faixas etárias analisadas. O grupo de 16 a 24 anos apresenta a maior utilização, enquanto o grupo de 65 a 74 anos apresenta a menor.
+        </p>
+        <p style="line-height:1.75; color:#555b60; font-size:14px">
+          Esse padrão mostra uma associação entre idade e utilização da IA nesta base de dados. Ele não demonstra, por si só, que a idade seja a causa da diferença.
+        </p>
+      </article>
+    </section>
+
+    <p class="status" id="status">Gráficos apresentados com os valores consolidados da análise.</p>
+    <footer>
+      Fonte: <a href="https://ec.europa.eu/eurostat/" target="_blank" rel="noreferrer">Eurostat</a> ·
+      Projeto acadêmico desenvolvido com Python, Pandas, NumPy e Plotly.
+    </footer>
+  </main>
+
+  <script>
+    const labels = ['16–24', '25–34', '35–44', '45–54', '55–64', '65–74'];
+    const values = [63.81, 50.65, 38.96, 28.35, 16.49, 6.50];
+    const common = {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        callbacks: { label: ctx => `${ctx.parsed.y.toFixed(2).replace('.', ',')}%` }
+      }},
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#73777b' }, border: { display: false } },
+        y: { beginAtZero: true, max: 70, ticks: {
+          color: '#73777b', callback: v => `${v}%`
+        }, grid: { color: '#eceeef' }, border: { display: false } }
+      }
+    };
+    new Chart(document.getElementById('ageChart'), {
+      type: 'bar',
+      data: { labels, datasets: [{
+        data: values, backgroundColor: '#858b90', hoverBackgroundColor: '#454b50',
+        borderRadius: 7, maxBarThickness: 62
+      }]},
+      options: common
+    });
+    new Chart(document.getElementById('compareChart'), {
+      type: 'bar',
+      data: { labels: ['16–24 anos', '65–74 anos'], datasets: [{
+        data: [63.81, 6.50], backgroundColor: ['#454b50', '#b9bec2'],
+        borderRadius: 7, maxBarThickness: 75
+      }]},
+      options: {
+        ...common,
+        scales: {
+          ...common.scales,
+          x: { ...common.scales.x, ticks: { color: '#73777b', maxRotation: 0 } }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
